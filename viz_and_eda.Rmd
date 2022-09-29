@@ -1,0 +1,170 @@
+---
+title: "viz_and_eda"
+author: "Shuting Kang"
+date: "2022-09-29"
+output: html_document
+---
+
+## let's import data
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+```
+This code from the course websit
+
+```{r}
+## download the dataset online from rnoaa package and only requist Three specific dataset
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+weather_df
+```
+
+## Basic scatterplot
+```{r}
+## for the ggplot (define the dataset we gonna use, and x-axis and y-axis)+add specific geomtry style we require.
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+the code below could be used instead
+```{r}
+weather_df %>% 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point()
+```
+
+```{r}
+weather_df %>% 
+  drop_na()%>%
+  filter(name=="CentralPark_NY")%>%
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point()
+```
+Let's keep making the same plot but different code and method.
+```{r}
+weather_scatterplot=
+  weather_df %>% 
+  drop_na()%>%
+  ggplot(aes(x=tmin, y=tmax))
+
+weather_scatterplot+
+  geom_point()
+```
+## advanced scatterplot
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point(aes(color=name))
+```
+nice! we get color and have a handly legend. maybe add a smooth curve and make the data points a bit transparent 
+```{r}
+  ggplot(weather_df,aes(x=tmin,y=tmax))+
+  geom_point(aes(color=name),alpha=0.5)+
+  geom_smooth(se=FALSE)
+```
+drop the NA value
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x=tmin,y=tmax))+
+  geom_point(aes(color=name),alpha=0.5)+
+  geom_smooth(se=FALSE)
+```
+
+the curve gives a sense of the relationship between variables,and the transparency shows where data are overlapping.
+Make the saparet plots based on the different dataset
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+drop the na value 
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+I've learned a lot about these data. however, yhe relationship between minimum and maximum temperature is little bit boring 
+show the relationship between maximum temperature and date(year)
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+drop the na value 
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+```{r}
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x = date, y = tmax, color = prcp)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+```{r}
+## we adjust the x=axis to make the label easier to visualize 
+weather_df%>%
+  drop_na()%>%
+  ggplot(aes(x = date, y = tmax, color = prcp)) + 
+  geom_point(aes(size = prcp), alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)+
+  theme(axis.text.x=element_text(angle = 90,vjust=0.5,hjust=1))
+```
+#### we can compare three variables at the same graph(date, tmax,and prcp)
+
+## Learning assessment
+ Write a code chain that starts with weather_df; focuses only on Central Park, converts temperatures to Fahrenheit, makes a scatterplot of min vs. max temperature, and overlays a linear regression line (using options in geom_smooth()).
+```{r}
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  drop_na()%>%
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_fahr = tmin * (9 / 5) + 32) %>% 
+  ggplot(aes(x = tmin_fahr, y = tmax_fahr)) +
+  geom_point(alpha = .5) + 
+  geom_smooth(method = "lm", se = FALSE)
+ 
+```
+## Odds and ends
+```{r}
+ggplot(weather_df, aes(x = tmax, y = tmin)) + 
+  geom_hex()
+```
